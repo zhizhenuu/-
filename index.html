@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极简待办</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #fef9f0 0%, #fdf2e4 30%, #fce4d6 60%, #fef5f0 100%);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* 暖色装饰圆 */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255,180,140,.25) 0%, transparent 70%);
+    top: -120px;
+    right: -100px;
+  }
+  body::after {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,200,160,.2) 0%, transparent 70%);
+    bottom: -80px;
+    left: -60px;
+  }
+  .deco-blob {
+    position: fixed;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+    animation: floatBlob 12s ease-in-out infinite;
+  }
+  .deco-blob:nth-child(1) {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,150,120,.18) 0%, transparent 70%);
+    top: 30%;
+    left: 5%;
+    animation-delay: 0s;
+  }
+  .deco-blob:nth-child(2) {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(255,190,140,.15) 0%, transparent 70%);
+    top: 50%;
+    right: 3%;
+    animation-delay: -6s;
+  }
+  @keyframes floatBlob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%      { transform: translate(30px, -20px) scale(1.08); }
+    50%      { transform: translate(-10px, 15px) scale(0.95); }
+    75%      { transform: translate(-25px, -10px) scale(1.05); }
+  }
+  .app {
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+    z-index: 1;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #165DFF;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .input-wrap {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  #todo-input {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid #e0e5ec;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .2s;
+    background: #fff;
+  }
+  #todo-input:focus {
+    border-color: #165DFF;
+  }
+  #todo-input::placeholder {
+    color: #bbb;
+  }
+  #add-btn {
+    padding: 12px 20px;
+    font-size: 16px;
+    background: #165DFF;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    white-space: nowrap;
+  }
+  #add-btn:hover {
+    background: #0e42d2;
+  }
+  #add-btn:active {
+    transform: scale(0.96);
+  }
+  .list {
+    list-style: none;
+  }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: #fff;
+    border-radius: 10px;
+    transition: background .15s;
+  }
+  .todo-item:hover {
+    background: #f0f4ff;
+  }
+  .checkbox {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #d0d5dd;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+  }
+  .checkbox:hover {
+    border-color: #165DFF;
+  }
+  .checkbox.done {
+    background: #165DFF;
+    border-color: #165DFF;
+  }
+  .checkbox.done::after {
+    content: "✓";
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .todo-text {
+    flex: 1;
+    font-size: 15px;
+    word-break: break-all;
+    transition: color .2s;
+  }
+  .todo-text.done {
+    color: #bbb;
+    text-decoration: line-through;
+  }
+  .delete-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #f53f3f;
+    background: transparent;
+    border: 1px solid #fcc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .delete-btn:hover {
+    background: #f53f3f;
+    color: #fff;
+  }
+  .delete-btn:active {
+    transform: scale(0.94);
+  }
+  .stats {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #999;
+  }
+  .empty-hint {
+    text-align: center;
+    color: #bbb;
+    font-size: 15px;
+    margin-top: 60px;
+    display: none;
+  }
+  .empty-hint.show {
+    display: block;
+  }
+  /* 列表动画 */
+  .todo-item {
+    animation: slideIn .25s ease;
+  }
+  .todo-item.removing {
+    animation: fadeOut .2s ease forwards;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.95); }
+  }
+  /* 清除按钮 */
+  .clear-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    gap: 12px;
+  }
+  .clear-btn {
+    font-size: 13px;
+    color: #999;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color .15s;
+  }
+  .clear-btn:hover {
+    color: #f53f3f;
+  }
+  .clear-btn:active {
+    transform: scale(0.96);
+  }
+  .stats {
+    font-size: 13px;
+    color: #999;
+    text-align: right;
+    flex: 1;
+  }
+  /* 编辑输入 */
+  .todo-text-edit {
+    flex: 1;
+    font-size: 15px;
+    padding: 4px 8px;
+    border: 2px solid #165DFF;
+    border-radius: 6px;
+    outline: none;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+<div class="deco-blob"></div>
+<div class="deco-blob"></div>
+<div class="app">
+  <h1>待办清单</h1>
+  <div class="input-wrap">
+    <input id="todo-input" type="text" placeholder="添加待办事项..." autofocus>
+    <button id="add-btn">添加</button>
+  </div>
+  <ul class="list" id="todo-list"></ul>
+  <div class="empty-hint" id="empty-hint">暂无待办，添加一条吧</div>
+  <div class="clear-bar">
+    <button class="clear-btn" id="clear-done" style="display:none">清除已完成</button>
+    <div class="stats" id="stats">已完成 0 / 总数 0</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'todo-mvp-data';
+
+  function loadTodos() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function saveTodos(todos) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  }
+
+  var input = document.getElementById('todo-input');
+  var addBtn = document.getElementById('add-btn');
+  var listEl = document.getElementById('todo-list');
+  var stats = document.getElementById('stats');
+  var emptyHint = document.getElementById('empty-hint');
+  var clearDoneBtn = document.getElementById('clear-done');
+
+  /* 渲染 */
+  function render() {
+    var todos = loadTodos();
+    var doneCount = 0;
+    listEl.innerHTML = '';
+
+    if (todos.length === 0) {
+      emptyHint.classList.add('show');
+    } else {
+      emptyHint.classList.remove('show');
+    }
+
+    todos.forEach(function (todo, idx) {
+      if (todo.done) doneCount++;
+
+      var li = document.createElement('li');
+      li.className = 'todo-item';
+
+      /* 复选框 */
+      var cb = document.createElement('span');
+      cb.className = 'checkbox' + (todo.done ? ' done' : '');
+      cb.addEventListener('click', function () { toggleTodo(idx); });
+      li.appendChild(cb);
+
+      /* 文字（双击编辑） */
+      var text = document.createElement('span');
+      text.className = 'todo-text' + (todo.done ? ' done' : '');
+      text.textContent = todo.text;
+      text.addEventListener('dblclick', function () { startEdit(idx, text); });
+      li.appendChild(text);
+
+      /* 删除 */
+      var del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.textContent = '删除';
+      del.addEventListener('click', function () {
+        li.classList.add('removing');
+        li.addEventListener('animationend', function () {
+          deleteTodo(idx);
+        }, { once: true });
+      });
+      li.appendChild(del);
+
+      listEl.appendChild(li);
+    });
+
+    stats.textContent = '已完成 ' + doneCount + ' / 总数 ' + todos.length;
+
+    /* 清除已完成按钮 */
+    clearDoneBtn.style.display = doneCount > 0 ? '' : 'none';
+  }
+
+  /* 添加 */
+  function addTodo(text) {
+    var t = text.trim();
+    if (!t) return;
+    var todos = loadTodos();
+    todos.unshift({ text: t, done: false });
+    saveTodos(todos);
+    render();
+  }
+
+  /* 切换完成 */
+  function toggleTodo(idx) {
+    var todos = loadTodos();
+    todos[idx].done = !todos[idx].done;
+    saveTodos(todos);
+    render();
+  }
+
+  /* 删除 */
+  function deleteTodo(idx) {
+    var todos = loadTodos();
+    todos.splice(idx, 1);
+    saveTodos(todos);
+    render();
+  }
+
+  /* 清除已完成 */
+  function clearDone() {
+    var todos = loadTodos().filter(function (t) { return !t.done; });
+    if (todos.length === loadTodos().length) return;
+    saveTodos(todos);
+    render();
+  }
+
+  /* 双击编辑 */
+  function startEdit(idx, span) {
+    var todos = loadTodos();
+    var todo = todos[idx];
+    var ed = document.createElement('input');
+    ed.className = 'todo-text-edit';
+    ed.value = todo.text;
+    span.replaceWith(ed);
+    ed.focus();
+    ed.select();
+
+    function finish() {
+      var val = ed.value.trim();
+      if (val && val !== todo.text) {
+        todo.text = val;
+        saveTodos(todos);
+      }
+      render();
+    }
+
+    ed.addEventListener('blur', finish);
+    ed.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { ed.blur(); }
+      if (e.key === 'Escape') { ed.value = todo.text; ed.blur(); }
+    });
+  }
+
+  /* 事件 */
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { addTodo(input.value); input.value = ''; }
+  });
+  addBtn.addEventListener('click', function () {
+    addTodo(input.value); input.value = ''; input.focus();
+  });
+  clearDoneBtn.addEventListener('click', clearDone);
+
+  render();
+})();
+</script>
+</body>
+</html>

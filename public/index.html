@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ccc 效率平台</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+</head>
+<body>
+
+<nav class="navbar" id="navbar" style="display:none">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a class="navbar-brand" href="#/todos">📋 ccc</a>
+    <div class="navbar-menu" id="navMenu">
+      <a data-route="/todos">待办</a>
+      <a data-route="/schedule">课程表</a>
+      <a data-route="/resume">简历</a>
+      <a data-route="/memos">随笔</a>
+      <a data-route="/games">🎮 休闲</a>
+      <a data-route="/profile">我的</a>
+      <a data-route="/admin" id="navAdmin" style="display:none">管理</a>
+    </div>
+  </div>
+  <div class="navbar-right">
+    <button class="btn-icon" id="themeNavBtn" title="切换主题">🌓</button>
+    <span class="username" id="navUsername"></span>
+    <button class="btn-logout" id="btnLogout">退出</button>
+  </div>
+</nav>
+
+<div class="app-container" id="appContent">
+  <div class="page-enter" style="text-align:center;padding:80px 0" id="appLoading">
+    <div style="font-size:32px;margin-bottom:12px">⏳</div>
+    <p style="color:var(--text-light)">加载中...</p>
+  </div>
+</div>
+
+<script>
+// Fallback: if app doesn't load within 10s, show connection error
+setTimeout(function(){
+  var el = document.getElementById('appLoading');
+  if (el) {
+    el.innerHTML = '<div style="font-size:48px;margin-bottom:12px">😵</div>'
+      + '<p style="color:var(--danger)">服务器连接失败</p>'
+      + '<p style="font-size:13px;color:var(--text-light);margin-top:8px">'
+      + '服务可能意外断开，请 <a href="javascript:location.reload()" style="color:var(--accent)">刷新重试</a></p>';
+  }
+}, 10000);
+</script>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/pages/login.js"></script>
+<script src="js/pages/register.js"></script>
+<script src="js/pages/forgot.js"></script>
+<script src="js/pages/todo.js"></script>
+<script src="js/pages/resume.js"></script>
+<script src="js/pages/memos.js"></script>
+<script src="js/pages/schedule.js"></script>
+<script src="js/pages/games.js?v2"></script>
+<script src="js/pages/profile.js"></script>
+<script src="js/pages/admin.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
